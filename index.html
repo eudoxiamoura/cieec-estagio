@@ -119,45 +119,52 @@
       const doc = new jsPDF();
       const margemX = 15;
       let y = 20;
-
-      const logo = new Image();
-      logo.src = 'https://ifro.edu.br/templates/padraogoverno01/images/logoIFRO.png';
-      logo.onload = () => {
-        doc.addImage(logo, 'PNG', margemX, y, 40, 15);
-        y += 25;
-
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text("Cadastro de Estágio", margemX, y); y += 10;
-
+    
+      // 🟢 Carrega a logo como imagem de forma assíncrona
+      const logo = await new Promise(resolve => {
+        const img = new Image();
+        img.src = 'https://ifro.edu.br/templates/padraogoverno01/images/logoIFRO.png';
+        img.onload = () => resolve(img);
+      });
+    
+      // ✅ Logo carregada, agora pode gerar o PDF
+      doc.addImage(logo, 'PNG', margemX, y, 40, 15);
+      y += 25;
+    
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Cadastro de Estágio", margemX, y); y += 10;
+    
+      doc.setFont(undefined, 'normal');
+      const getVal = (name) => emBranco ? '__________________' : form[name].value;
+    
+      doc.text(`Nome: ${getVal('nomeAluno')}`, margemX, y); y += 8;
+      doc.text(`Curso: ${getVal('curso')}`, margemX, y); y += 8;
+      doc.text(`Orientador: ${getVal('orientador')}`, margemX, y); y += 8;
+    
+      doc.setFont(undefined, 'bold');
+      doc.text("Plano de Horas:", margemX, y); y += 8;
+    
+      const linhas = document.querySelectorAll('#diasTabela tbody tr');
+      linhas.forEach(l => {
+        const data = emBranco ? '____/____/____' : l.children[0].children[0].value;
+        const horas = emBranco ? '__' : l.children[1].children[0].value;
         doc.setFont(undefined, 'normal');
-        const getVal = (name) => emBranco ? '__________________' : form[name].value;
-
-        doc.text(`Nome: ${getVal('nomeAluno')}`, margemX, y); y += 8;
-        doc.text(`Curso: ${getVal('curso')}`, margemX, y); y += 8;
-        doc.text(`Orientador: ${getVal('orientador')}`, margemX, y); y += 8;
-
-        doc.setFont(undefined, 'bold');
-        doc.text("Plano de Horas:", margemX, y); y += 8;
-        const linhas = document.querySelectorAll('#diasTabela tbody tr');
-        linhas.forEach(l => {
-          const data = emBranco ? '____/____/____' : l.children[0].children[0].value;
-          const horas = emBranco ? '__' : l.children[1].children[0].value;
-          doc.setFont(undefined, 'normal');
-          doc.text(`• ${data} - ${horas}h`, margemX + 5, y);
-          y += 6;
-        });
-        doc.setFont(undefined, 'bold');
-        doc.text(`Total de horas: ${emBranco ? '__' : totalHoras}`, margemX, y); y += 20;
-
-        doc.setFont(undefined, 'normal');
-        doc.text("Assinaturas:", margemX, y); y += 10;
-        doc.text('______________________________', margemX, y);
-        doc.text('Aluno(a)', margemX, y + 6);
-        doc.text('______________________________', margemX + 100, y);
-        doc.text('Orientador(a)', margemX + 100, y + 6);
-
-        doc.save(emBranco ? "modelo_estagio.pdf" : "cadastro_estagio.pdf");
+        doc.text(`• ${data} - ${horas}h`, margemX + 5, y);
+        y += 6;
+      });
+    
+      doc.setFont(undefined, 'bold');
+      doc.text(`Total de horas: ${emBranco ? '__' : totalHoras}`, margemX, y); y += 20;
+    
+      doc.setFont(undefined, 'normal');
+      doc.text("Assinaturas:", margemX, y); y += 10;
+      doc.text('______________________________', margemX, y);
+      doc.text('Aluno(a)', margemX, y + 6);
+      doc.text('______________________________', margemX + 100, y);
+      doc.text('Orientador(a)', margemX + 100, y + 6);
+    
+      doc.save(emBranco ? "modelo_estagio.pdf" : "cadastro_estagio.pdf");
       };
     }
   </script>
