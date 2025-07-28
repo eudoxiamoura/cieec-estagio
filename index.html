@@ -66,25 +66,46 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      let y = 10;
+      const margemX = 15;
+      const larguraMax = 180;
+      let y = 20;
+
       doc.setFontSize(12);
-      doc.text("Cadastro de Estágio", 10, y); y += 10;
-      doc.text(`Nome: ${form.nomeAluno.value}`, 10, y); y += 8;
-      doc.text(`Email: ${form.email.value}`, 10, y); y += 8;
-      doc.text(`Telefone: ${form.telefone.value}`, 10, y); y += 8;
-      doc.text(`Curso: ${form.curso.value}`, 10, y); y += 8;
-      doc.text(`Orientador: ${form.orientador.value}`, 10, y); y += 12;
-      
-      doc.text("Planejamento de Estágio:", 10, y); y += 8;
+      doc.setFont(undefined, 'bold');
+      doc.text("Cadastro de Estágio", margemX, y); y += 10;
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`Nome: ${form.nomeAluno.value}`, margemX, y); y += 8;
+      doc.text(`Email: ${form.email.value}`, margemX, y); y += 8;
+      doc.text(`Telefone: ${form.telefone.value}`, margemX, y); y += 8;
+      doc.text(`Curso: ${form.curso.value}`, margemX, y); y += 8;
+      doc.text(`Orientador: ${form.orientador.value}`, margemX, y); y += 12;
+
+      doc.setFont(undefined, 'bold');
+      doc.text("Planejamento de Estágio:", margemX, y); y += 8;
+      doc.setFont(undefined, 'normal');
+
       const linhas = document.querySelectorAll('#diasTabela tbody tr');
       linhas.forEach(l => {
         const data = l.children[0].children[0].value;
         const horas = l.children[1].children[0].value;
-        doc.text(`- ${data}: ${horas}h`, 12, y);
-        y += 8;
+        if (data && horas) {
+          doc.text(`• ${data} - ${horas}h`, margemX + 5, y);
+          y += 6;
+        }
       });
-      y += 4;
-      doc.text(`Total de horas: ${totalHoras}`, 10, y);
+      y += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text(`Total de horas: ${totalHoras}`, margemX, y); y += 20;
+
+      doc.setFont(undefined, 'normal');
+      doc.text("Assinaturas:", margemX, y); y += 10;
+
+      doc.text('______________________________', margemX, y);
+      doc.text('Aluno(a)', margemX, y + 6);
+
+      doc.text('______________________________', margemX + 100, y);
+      doc.text('Orientador(a)', margemX + 100, y + 6);
 
       doc.save("cadastro_estagio.pdf");
     }
