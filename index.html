@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro de Estágio</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; }
+    input, textarea, select { width: 100%; padding: 5px; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+    button { margin-top: 15px; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Estágio</h1>
+  <form id="estagioForm">
+    <label>Nome do Aluno:<input name="nomeAluno"></label>
+    <label>Email:<input name="email"></label>
+    <label>Telefone:<input name="telefone"></label>
+    <label>Curso:<input name="curso"></label>
+    <label>Professor Orientador:<input name="orientador"></label>
+
+    <h3>Planejamento de Estágio</h3>
+    <label>Carga horária total: <strong>100 horas</strong></label>
+    <table id="diasTabela">
+      <thead>
+        <tr><th>Data</th><th>Horas</th><th>Ação</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button type="button" onclick="adicionarLinha()">Adicionar Dia</button>
+    <p>Total de horas: <span id="totalHoras">0</span></p>
+
+    <button type="button" onclick="gerarPDF()">Gerar PDF</button>
+  </form>
+
+  <script>
+    let totalHoras = 0;
+
+    function adicionarLinha() {
+      const tabela = document.querySelector('#diasTabela tbody');
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td><input type="date"></td>
+        <td><input type="number" min="1" max="12" onchange="atualizarTotalHoras()"></td>
+        <td><button type="button" onclick="removerLinha(this)">Remover</button></td>
+      `;
+      tabela.appendChild(linha);
+    }
+
+    function removerLinha(botao) {
+      botao.closest('tr').remove();
+      atualizarTotalHoras();
+    }
+
+    function atualizarTotalHoras() {
+      const horasInputs = document.querySelectorAll('#diasTabela tbody input[type="number"]');
+      totalHoras = Array.from(horasInputs).reduce((acc, el) => acc + (parseInt(el.value) || 0), 0);
+      document.getElementById('totalHoras').textContent = totalHoras;
+    }
+
+    async function gerarPDF() {
+      const form = document.forms['estagioForm'];
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      let y = 10;
+      doc.setFontSize(12);
+      doc.text("Cadastro de Estágio", 10, y); y += 10;
+      doc.text(`Nome: ${form.nomeAluno.value}`, 10, y); y += 8;
+      doc.text(`Email: ${form.email.value}`, 10, y); y += 8;
+      doc.text(`Telefone: ${form.telefone.value}`, 10, y); y += 8;
+      doc.text(`Curso: ${form.curso.value}`, 10, y); y += 8;
+      doc.text(`Orientador: ${form.orientador.value}`, 10, y); y += 12;
+      
+      doc.text("Planejamento de Estágio:", 10, y); y += 8;
+      const linhas = document.querySelectorAll('#diasTabela tbody tr');
+      linhas.forEach(l => {
+        const data = l.children[0].children[0].value;
+        const horas = l.children[1].children[0].value;
+        doc.text(`- ${data}: ${horas}h`, 12, y);
+        y += 8;
+      });
+      y += 4;
+      doc.text(`Total de horas: ${totalHoras}`, 10, y);
+
+      doc.save("cadastro_estagio.pdf");
+    }
+  </script>
+</body>
+</html>
