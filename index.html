@@ -3,37 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Cadastro de Estágio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 800px; margin: auto; }
     label { display: block; margin-top: 10px; }
     input, textarea, select { width: 100%; padding: 5px; margin-top: 5px; }
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
     button { margin-top: 15px; padding: 10px 20px; }
+    h2 { margin-top: 30px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    @media (max-width: 600px) {
+      input, textarea, select, button { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
   <h1>Cadastro de Estágio</h1>
   <form id="estagioForm">
+    <h2>Dados Pessoais</h2>
     <label>Nome do Aluno:<input name="nomeAluno"></label>
     <label>Email:<input name="email"></label>
     <label>Telefone:<input name="telefone"></label>
     <label>Curso:<input name="curso"></label>
     <label>Professor Orientador:<input name="orientador"></label>
 
-    <h3>Planejamento de Estágio</h3>
-    <label>Carga horária total: <strong>100 horas</strong></label>
+    <h2>Dados da Empresa</h2>
+    <label>Nome da Concedente:<input name="empresa"></label>
+    <label>CNPJ ou CAEPF:<input name="cnpj"></label>
+    <label>Ramo de Atividade:<input name="ramo"></label>
+    <label>Cidade:<input name="cidade"></label>
+    <label>CEP:<input name="cep"></label>
+    <label>UF:<input name="uf" value="RO"></label>
+    <label>Bairro:<input name="bairro"></label>
+    <label>Rua:<input name="rua"></label>
+    <label>Número:<input name="numero"></label>
+    <label>Nome do Representante:<input name="representante"></label>
+    <label>CPF Representante:<input name="cpfRepresentante"></label>
+    <label>Nacionalidade:<input name="nacionalidadeRepresentante"></label>
+    <label>Cargo Representante:<input name="cargoRepresentante"></label>
+    <label>Telefone Representante:<input name="telRepresentante"></label>
+    <label>Email Representante:<input name="emailRepresentante"></label>
+    <label>Nome do Supervisor:<input name="supervisor"></label>
+    <label>CPF Supervisor:<input name="cpfSupervisor"></label>
+    <label>Nacionalidade Supervisor:<input name="nacionalidadeSupervisor"></label>
+    <label>Cargo Supervisor:<input name="cargoSupervisor"></label>
+    <label>Telefone Supervisor:<input name="telSupervisor"></label>
+    <label>Email Supervisor:<input name="emailSupervisor"></label>
+
+    <h2>Atividades a Serem Desenvolvidas</h2>
+    <table id="atividades">
+      <thead><tr><th>Atividade</th><th>Ação</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <button type="button" onclick="adicionarAtividade()">Adicionar Atividade</button>
+
+    <h2>Responsável pelo Aluno</h2>
+    <label>Nome:<input name="respNome"></label>
+    <label>CPF:<input name="respCpf"></label>
+    <label>Nacionalidade:<input name="respNac"></label>
+    <label>Telefone:<input name="respTel"></label>
+    <label>Email:<input name="respEmail"></label>
+
+    <h2>Plano de Horas</h2>
     <table id="diasTabela">
-      <thead>
-        <tr><th>Data</th><th>Horas</th><th>Ação</th></tr>
-      </thead>
+      <thead><tr><th>Data</th><th>Horas</th><th>Ação</th></tr></thead>
       <tbody></tbody>
     </table>
     <button type="button" onclick="adicionarLinha()">Adicionar Dia</button>
-    <p>Total de horas: <span id="totalHoras">0</span></p>
+    <p>Total de horas: <span id="totalHoras">0</span> – <span id="statusHoras">Não atingiu 100 horas</span></p>
 
-    <button type="button" onclick="gerarPDF()">Gerar PDF</button>
+    <button type="button" onclick="gerarPDF(false)">Gerar PDF Preenchido</button>
+    <button type="button" onclick="gerarPDF(true)">Gerar Modelo em Branco</button>
   </form>
 
   <script>
@@ -50,6 +91,16 @@
       tabela.appendChild(linha);
     }
 
+    function adicionarAtividade() {
+      const tabela = document.querySelector('#atividades tbody');
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td><input type="text"></td>
+        <td><button type="button" onclick="removerLinha(this)">Remover</button></td>
+      `;
+      tabela.appendChild(linha);
+    }
+
     function removerLinha(botao) {
       botao.closest('tr').remove();
       atualizarTotalHoras();
@@ -59,55 +110,55 @@
       const horasInputs = document.querySelectorAll('#diasTabela tbody input[type="number"]');
       totalHoras = Array.from(horasInputs).reduce((acc, el) => acc + (parseInt(el.value) || 0), 0);
       document.getElementById('totalHoras').textContent = totalHoras;
+      document.getElementById('statusHoras').textContent = totalHoras >= 100 ? 'Atingiu 100 horas' : 'Não atingiu 100 horas';
     }
 
-    async function gerarPDF() {
+    async function gerarPDF(emBranco) {
       const form = document.forms['estagioForm'];
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
       const margemX = 15;
-      const larguraMax = 180;
       let y = 20;
 
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.text("Cadastro de Estágio", margemX, y); y += 10;
+      const logo = new Image();
+      logo.src = 'https://ifro.edu.br/templates/padraogoverno01/images/logoIFRO.png';
+      logo.onload = () => {
+        doc.addImage(logo, 'PNG', margemX, y, 40, 15);
+        y += 25;
 
-      doc.setFont(undefined, 'normal');
-      doc.text(`Nome: ${form.nomeAluno.value}`, margemX, y); y += 8;
-      doc.text(`Email: ${form.email.value}`, margemX, y); y += 8;
-      doc.text(`Telefone: ${form.telefone.value}`, margemX, y); y += 8;
-      doc.text(`Curso: ${form.curso.value}`, margemX, y); y += 8;
-      doc.text(`Orientador: ${form.orientador.value}`, margemX, y); y += 12;
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text("Cadastro de Estágio", margemX, y); y += 10;
 
-      doc.setFont(undefined, 'bold');
-      doc.text("Planejamento de Estágio:", margemX, y); y += 8;
-      doc.setFont(undefined, 'normal');
+        doc.setFont(undefined, 'normal');
+        const getVal = (name) => emBranco ? '__________________' : form[name].value;
 
-      const linhas = document.querySelectorAll('#diasTabela tbody tr');
-      linhas.forEach(l => {
-        const data = l.children[0].children[0].value;
-        const horas = l.children[1].children[0].value;
-        if (data && horas) {
+        doc.text(`Nome: ${getVal('nomeAluno')}`, margemX, y); y += 8;
+        doc.text(`Curso: ${getVal('curso')}`, margemX, y); y += 8;
+        doc.text(`Orientador: ${getVal('orientador')}`, margemX, y); y += 8;
+
+        doc.setFont(undefined, 'bold');
+        doc.text("Plano de Horas:", margemX, y); y += 8;
+        const linhas = document.querySelectorAll('#diasTabela tbody tr');
+        linhas.forEach(l => {
+          const data = emBranco ? '____/____/____' : l.children[0].children[0].value;
+          const horas = emBranco ? '__' : l.children[1].children[0].value;
+          doc.setFont(undefined, 'normal');
           doc.text(`• ${data} - ${horas}h`, margemX + 5, y);
           y += 6;
-        }
-      });
-      y += 6;
-      doc.setFont(undefined, 'bold');
-      doc.text(`Total de horas: ${totalHoras}`, margemX, y); y += 20;
+        });
+        doc.setFont(undefined, 'bold');
+        doc.text(`Total de horas: ${emBranco ? '__' : totalHoras}`, margemX, y); y += 20;
 
-      doc.setFont(undefined, 'normal');
-      doc.text("Assinaturas:", margemX, y); y += 10;
+        doc.setFont(undefined, 'normal');
+        doc.text("Assinaturas:", margemX, y); y += 10;
+        doc.text('______________________________', margemX, y);
+        doc.text('Aluno(a)', margemX, y + 6);
+        doc.text('______________________________', margemX + 100, y);
+        doc.text('Orientador(a)', margemX + 100, y + 6);
 
-      doc.text('______________________________', margemX, y);
-      doc.text('Aluno(a)', margemX, y + 6);
-
-      doc.text('______________________________', margemX + 100, y);
-      doc.text('Orientador(a)', margemX + 100, y + 6);
-
-      doc.save("cadastro_estagio.pdf");
+        doc.save(emBranco ? "modelo_estagio.pdf" : "cadastro_estagio.pdf");
+      };
     }
   </script>
 </body>
